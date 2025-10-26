@@ -1,0 +1,489 @@
+/**
+ * Floating Widget Styles
+ * Interactive UI for displaying transformation results
+ */
+
+/* ============================================
+   WIDGET CONTAINER
+   ============================================ */
+
+.mle-widget {
+  /* Position set via JavaScript */
+  position: fixed;
+  z-index: 2147483647; /* Maximum z-index */
+  font-family: var(--mle-font-family);
+  display: none; /* Hidden by default */
+}
+
+.mle-widget-container {
+  background: var(--mle-bg-primary);
+  border-radius: var(--mle-radius-lg);
+  box-shadow: var(--mle-shadow-xl);
+  min-width: 400px;
+  max-width: 600px;
+  width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+
+.mle-widget-header {
+  background: var(--mle-gradient);
+  color: white;
+  padding: 16px 20px;
+  border-radius: var(--mle-radius-lg) var(--mle-radius-lg) 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: move;
+  user-select: none;
+}
+
+.mle-widget-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mle-close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 24px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+  line-height: 1;
+  padding: 0;
+}
+
+.mle-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================
+   TABS
+   ============================================ */
+
+.mle-widget-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px 0;
+  background: var(--mle-bg-primary);
+  border-bottom: 1px solid var(--mle-border-color);
+}
+
+.mle-tab {
+  background: transparent;
+  border: none;
+  color: var(--mle-text-secondary);
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: var(--mle-radius-md) var(--mle-radius-md) 0 0;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.mle-tab:hover {
+  background: rgba(102, 126, 234, 0.05);
+  color: var(--mle-primary);
+}
+
+.mle-tab.active {
+  background: var(--mle-bg-secondary);
+  color: var(--mle-primary);
+  font-weight: 600;
+  border-bottom: 2px solid var(--mle-primary);
+}
+
+/* ============================================
+   BODY
+   ============================================ */
+
+.mle-widget-body {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--mle-bg-secondary);
+  min-height: 200px;
+  max-height: calc(80vh - 200px);
+}
+
+.mle-tab-content {
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   CONTENT STATES
+   ============================================ */
+
+.mle-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--mle-text-secondary);
+  font-size: 14px;
+}
+
+.mle-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 16px;
+}
+
+.mle-loading p {
+  margin: 0;
+  color: var(--mle-text-secondary);
+  font-size: 14px;
+}
+
+.mle-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--mle-radius-md);
+  padding: 16px;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.mle-error p {
+  margin: 0 0 8px 0;
+  font-weight: 500;
+}
+
+.mle-error details {
+  margin-top: 12px;
+}
+
+.mle-error summary {
+  cursor: pointer;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.mle-error pre {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 12px;
+  border-radius: var(--mle-radius-sm);
+  overflow-x: auto;
+  font-size: 12px;
+  margin: 8px 0 0 0;
+}
+
+/* ============================================
+   RESULT HEADER
+   ============================================ */
+
+.mle-result-header {
+  margin-bottom: 20px;
+}
+
+.mle-result-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--mle-text-primary);
+}
+
+.mle-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--mle-text-secondary);
+}
+
+.mle-badge {
+  background: var(--mle-gradient);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* ============================================
+   TEXT CONTENT
+   ============================================ */
+
+.mle-text-content {
+  color: var(--mle-text-primary);
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+.mle-text-content h2 {
+  font-size: 20px;
+  margin: 24px 0 12px 0;
+  color: var(--mle-text-primary);
+  font-weight: 600;
+}
+
+.mle-text-content h3 {
+  font-size: 17px;
+  margin: 20px 0 10px 0;
+  color: var(--mle-text-primary);
+  font-weight: 600;
+}
+
+.mle-text-content h4 {
+  font-size: 15px;
+  margin: 16px 0 8px 0;
+  color: var(--mle-primary);
+  font-weight: 600;
+}
+
+.mle-text-content p {
+  margin: 0 0 12px 0;
+}
+
+.mle-text-content strong {
+  font-weight: 600;
+  color: var(--mle-text-primary);
+}
+
+.mle-text-content ul {
+  margin: 12px 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.mle-text-content li {
+  margin: 8px 0;
+  padding-left: 24px;
+  position: relative;
+}
+
+.mle-text-content li::before {
+  content: "•";
+  position: absolute;
+  left: 8px;
+  color: var(--mle-primary);
+  font-weight: bold;
+}
+
+/* Study notes specific styling */
+.mle-study-notes h4 {
+  margin-top: 20px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+}
+
+.mle-study-notes li {
+  background: rgba(102, 126, 234, 0.03);
+  padding: 10px 10px 10px 24px;
+  border-radius: var(--mle-radius-sm);
+  margin: 6px 0;
+}
+
+/* ============================================
+   DIAGRAM WRAPPER
+   ============================================ */
+
+.mle-diagram-wrapper {
+  background: white;
+  border-radius: var(--mle-radius-md);
+  padding: 20px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--mle-border-color);
+}
+
+.mle-diagram-wrapper svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* ============================================
+   ACTIONS & BUTTONS
+   ============================================ */
+
+.mle-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--mle-border-color);
+}
+
+.mle-action-btn {
+  background: var(--mle-bg-primary);
+  border: 1px solid var(--mle-border-color);
+  color: var(--mle-text-primary);
+  padding: 8px 16px;
+  border-radius: var(--mle-radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mle-action-btn:hover {
+  background: var(--mle-primary);
+  color: white;
+  border-color: var(--mle-primary);
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+
+.mle-widget-footer {
+  padding: 12px 16px;
+  background: var(--mle-bg-primary);
+  border-top: 1px solid var(--mle-border-color);
+  display: flex;
+  gap: 8px;
+}
+
+.mle-footer-btn {
+  flex: 1;
+  background: var(--mle-gradient);
+  border: none;
+  color: white;
+  padding: 10px 16px;
+  border-radius: var(--mle-radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.mle-footer-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.mle-footer-btn:active {
+  transform: translateY(0);
+}
+
+/* ============================================
+   FEEDBACK (Toast)
+   ============================================ */
+
+.mle-feedback {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(34, 197, 94, 0.95);
+  color: white;
+  padding: 10px 20px;
+  border-radius: var(--mle-radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: var(--mle-shadow-lg);
+  animation: slideUp 0.3s ease;
+  z-index: 10;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 600px) {
+  .mle-widget-container {
+    min-width: 300px;
+    width: calc(100vw - 40px);
+    max-width: 100%;
+  }
+
+  .mle-widget-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .mle-widget-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mle-tab {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+.mle-widget-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mle-widget-body::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.mle-widget-body::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.3);
+  border-radius: 4px;
+}
+
+.mle-widget-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 126, 234, 0.5);
+}
+
+/* ============================================
+   HIGHLIGHTED NODE (from InteractiveDiagram)
+   ============================================ */
+
+.mle-highlighted {
+  filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.8)) !important;
+  transition: filter 0.2s ease !important;
+}

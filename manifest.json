@@ -1,0 +1,82 @@
+{
+  "manifest_version": 3,
+  "name": "Multimodal Learning Enhancer",
+  "version": "1.0.0",
+  "description": "Transform any webpage into your brain's native language - diagrams, summaries, and study notes powered by Chrome's built-in AI",
+
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "32": "assets/icons/icon32.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+
+  "permissions": [
+    "activeTab",
+    "contextMenus",
+    "storage",
+    "scripting"
+  ],
+
+  "host_permissions": [
+    "<all_urls>"
+  ],
+
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "lib/utils.js",
+        "lib/chrome-ai-apis.js",
+        "lib/content-analyzer.js",
+        "templates/text-prompts.js",
+        "templates/diagram-prompts.js",
+        "lib/text-transformer.js",
+        "lib/diagram-generator.js",
+        "lib/visual-engine.js",
+        "lib/interactive-diagram.js",
+        "content/content-extractor.js",
+        "content/widget.js",
+        "content/content-script.js"
+      ],
+      "css": [
+        "styles/common.css",
+        "styles/widget.css",
+        "styles/diagram.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "32": "assets/icons/icon32.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    },
+    "default_title": "Multimodal Learning Enhancer"
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "lib/mermaid.min.js",
+        "assets/images/*.svg",
+        "assets/images/*.png",
+        "styles/*.css"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

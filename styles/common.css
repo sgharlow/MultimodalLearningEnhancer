@@ -1,0 +1,188 @@
+/**
+ * Common styles shared across extension components
+ */
+
+/* CSS Variables */
+:root {
+  --mle-primary: #667eea;
+  --mle-primary-dark: #764ba2;
+  --mle-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  --mle-success: #48bb78;
+  --mle-warning: #ed8936;
+  --mle-error: #f56565;
+  --mle-info: #4299e1;
+
+  --mle-gray-50: #f7fafc;
+  --mle-gray-100: #edf2f7;
+  --mle-gray-200: #e2e8f0;
+  --mle-gray-300: #cbd5e0;
+  --mle-gray-400: #a0aec0;
+  --mle-gray-500: #718096;
+  --mle-gray-600: #4a5568;
+  --mle-gray-700: #2d3748;
+  --mle-gray-800: #1a202c;
+
+  --mle-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --mle-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --mle-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --mle-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+  --mle-radius-sm: 4px;
+  --mle-radius-md: 8px;
+  --mle-radius-lg: 12px;
+
+  --mle-transition: all 0.2s ease;
+}
+
+/* Reset for MLE components */
+.mle-reset {
+  all: initial;
+  font-family: var(--mle-font-family);
+  box-sizing: border-box;
+}
+
+.mle-reset *, .mle-reset *::before, .mle-reset *::after {
+  box-sizing: border-box;
+}
+
+/* Utility Classes */
+.mle-hidden {
+  display: none !important;
+}
+
+.mle-invisible {
+  visibility: hidden !important;
+}
+
+.mle-text-center {
+  text-align: center;
+}
+
+.mle-text-left {
+  text-align: left;
+}
+
+.mle-text-right {
+  text-align: right;
+}
+
+.mle-mt-1 { margin-top: 4px; }
+.mle-mt-2 { margin-top: 8px; }
+.mle-mt-3 { margin-top: 12px; }
+.mle-mt-4 { margin-top: 16px; }
+
+.mle-mb-1 { margin-bottom: 4px; }
+.mle-mb-2 { margin-bottom: 8px; }
+.mle-mb-3 { margin-bottom: 12px; }
+.mle-mb-4 { margin-bottom: 16px; }
+
+.mle-p-1 { padding: 4px; }
+.mle-p-2 { padding: 8px; }
+.mle-p-3 { padding: 12px; }
+.mle-p-4 { padding: 16px; }
+
+/* Loading Spinner */
+.mle-spinner {
+  width: 40px;
+  height: 40px;
+  margin: 20px auto;
+  border: 4px solid var(--mle-gray-200);
+  border-top-color: var(--mle-primary);
+  border-radius: 50%;
+  animation: mle-spin 0.8s linear infinite;
+}
+
+@keyframes mle-spin {
+  to { transform: rotate(360deg); }
+}
+
+.mle-loader {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.mle-loader p {
+  margin-top: 12px;
+  color: var(--mle-gray-600);
+  font-size: 14px;
+}
+
+/* Error State */
+.mle-error {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.mle-error-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.mle-error h3 {
+  color: var(--mle-error);
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+
+.mle-error p {
+  color: var(--mle-gray-600);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.mle-error details {
+  margin-top: 16px;
+  text-align: left;
+  background: var(--mle-gray-50);
+  padding: 12px;
+  border-radius: var(--mle-radius-md);
+}
+
+.mle-error pre {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  overflow-x: auto;
+  color: var(--mle-gray-700);
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode support (for future) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mle-gray-50: #1a202c;
+    --mle-gray-100: #2d3748;
+    --mle-gray-200: #4a5568;
+    --mle-gray-700: #e2e8f0;
+    --mle-gray-800: #f7fafc;
+  }
+}
+
+/* Scrollbar styling */
+.mle-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.mle-scrollbar::-webkit-scrollbar-track {
+  background: var(--mle-gray-100);
+  border-radius: 4px;
+}
+
+.mle-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--mle-gray-300);
+  border-radius: 4px;
+}
+
+.mle-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--mle-gray-400);
+}

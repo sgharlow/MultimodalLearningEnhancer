@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multimodal Learning Enhancer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="popup-header">
+      <h1>🧠 Learning Enhancer</h1>
+      <p class="tagline">Transform content into your learning language</p>
+    </header>
+
+    <!-- API Status Section -->
+    <section class="api-status">
+      <h2>API Status</h2>
+      <div id="apiStatusContainer" class="status-grid">
+        <div class="status-item" data-api="prompt">
+          <div class="status-indicator"></div>
+          <span>Prompt API</span>
+        </div>
+        <div class="status-item" data-api="summarizer">
+          <div class="status-indicator"></div>
+          <span>Summarizer API</span>
+        </div>
+        <div class="status-item" data-api="writer">
+          <div class="status-indicator"></div>
+          <span>Writer API</span>
+        </div>
+        <div class="status-item" data-api="rewriter">
+          <div class="status-indicator"></div>
+          <span>Rewriter API</span>
+        </div>
+      </div>
+
+      <div id="apiWarning" class="api-warning hidden">
+        <div class="warning-icon">⚠️</div>
+        <p>Some APIs are not available</p>
+        <button id="showInstructions" class="btn-secondary">View Setup Instructions</button>
+      </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="quick-actions">
+      <h2>Quick Actions</h2>
+      <div class="action-buttons">
+        <button class="action-btn" data-action="visual" disabled>
+          <span class="icon">📊</span>
+          <span class="label">Generate Diagram</span>
+        </button>
+        <button class="action-btn" data-action="summary" disabled>
+          <span class="icon">📝</span>
+          <span class="label">Create Summary</span>
+        </button>
+        <button class="action-btn" data-action="studynotes" disabled>
+          <span class="icon">🎯</span>
+          <span class="label">Study Notes</span>
+        </button>
+      </div>
+      <p class="hint">Right-click on any webpage or select text to transform</p>
+    </section>
+
+    <!-- Statistics Section -->
+    <section class="stats-section">
+      <div class="stats-grid" id="statsGrid">
+        <!-- Stats will be inserted here -->
+      </div>
+    </section>
+
+    <!-- History Section -->
+    <section class="history-section">
+      <div class="section-header">
+        <h2>Recent Transformations</h2>
+        <div class="history-actions">
+          <button id="exportHistory" class="btn-icon" title="Export History">📤</button>
+          <button id="importHistory" class="btn-icon" title="Import History">📥</button>
+          <button id="clearHistory" class="btn-text">Clear All</button>
+        </div>
+      </div>
+
+      <!-- Search and Filter -->
+      <div class="history-controls">
+        <input
+          type="text"
+          id="searchHistory"
+          class="search-input"
+          placeholder="Search transformations..."
+        />
+        <select id="filterType" class="filter-select">
+          <option value="all">All Types</option>
+          <option value="visual">📊 Diagrams</option>
+          <option value="summary">📝 Summaries</option>
+          <option value="studynotes">🎯 Study Notes</option>
+        </select>
+      </div>
+
+      <div id="historyContainer" class="history-list">
+        <!-- History items will be inserted here -->
+      </div>
+
+      <!-- Storage Info -->
+      <div class="storage-info" id="storageInfo">
+        <!-- Storage usage info will be inserted here -->
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="popup-footer">
+      <p class="version">v1.0.0</p>
+      <a href="#" id="viewDocs">Documentation</a>
+    </footer>
+  </div>
+
+  <!-- Instructions Modal -->
+  <div id="instructionsModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Setup Chrome AI APIs</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p><strong>This extension requires Chrome's Built-in AI APIs.</strong></p>
+        <ol>
+          <li>Use <strong>Chrome Dev</strong> or <strong>Canary</strong> (version 128+)</li>
+          <li>Enable these flags at <code>chrome://flags</code>:
+            <ul>
+              <li><code>#prompt-api-for-gemini-nano</code></li>
+              <li><code>#summarization-api-for-gemini-nano</code></li>
+              <li><code>#writer-api-for-gemini-nano</code></li>
+              <li><code>#rewriter-api-for-gemini-nano</code></li>
+              <li><code>#optimization-guide-on-device-model</code> → "Enabled BypassPerfRequirement"</li>
+            </ul>
+          </li>
+          <li><strong>Restart Chrome</strong></li>
+          <li>Download Gemini Nano model:
+            <br>Open DevTools Console and run:
+            <br><code>await ai.languageModel.create();</code>
+          </li>
+          <li>Wait for download (~1.7 GB)</li>
+          <li>Refresh this popup</li>
+        </ol>
+        <a href="#" id="viewFullDocs" class="btn-primary">View Full Documentation</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file input for import -->
+  <input type="file" id="importFileInput" accept=".json" style="display: none;" />
+
+  <script src="popup.js"></script>
+</body>
+</html>

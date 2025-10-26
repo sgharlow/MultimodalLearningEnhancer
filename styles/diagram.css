@@ -1,0 +1,390 @@
+/**
+ * Interactive Diagram Styles
+ * Styles for Mermaid diagrams with zoom, pan, and interactive features
+ */
+
+/* ============================================
+   DIAGRAM CONTAINER
+   ============================================ */
+
+.mle-diagram-container {
+  background: white;
+  border: 1px solid var(--mle-border-color);
+  border-radius: var(--mle-radius-md);
+  padding: 20px;
+  margin: 16px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.mle-diagram-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--mle-text-primary);
+  margin-bottom: 16px;
+}
+
+.mle-diagram {
+  overflow: hidden;
+  max-height: 600px;
+  position: relative;
+}
+
+.mle-diagram svg {
+  max-width: 100%;
+  height: auto;
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.1s ease-out;
+}
+
+.mle-diagram svg:active {
+  cursor: grabbing;
+}
+
+/* ============================================
+   DIAGRAM CONTROLS (Interactive Features)
+   ============================================ */
+
+.mle-diagram-controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+.mle-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--mle-border-color);
+  border-radius: var(--mle-radius-md);
+  padding: 6px;
+  box-shadow: var(--mle-shadow-md);
+  backdrop-filter: blur(10px);
+}
+
+.mle-control-btn {
+  background: white;
+  border: 1px solid var(--mle-border-color);
+  border-radius: var(--mle-radius-sm);
+  padding: 8px 12px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--mle-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 36px;
+  font-weight: 500;
+}
+
+.mle-control-btn:hover {
+  background: var(--mle-primary);
+  color: white;
+  border-color: var(--mle-primary);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.mle-control-btn:active {
+  transform: scale(0.98);
+}
+
+/* Specific button styles */
+.mle-control-btn[data-action="zoom-in"],
+.mle-control-btn[data-action="zoom-out"] {
+  font-family: monospace;
+}
+
+.mle-control-btn[data-action="download"],
+.mle-control-btn[data-action="copy"] {
+  font-size: 18px;
+}
+
+/* ============================================
+   DIAGRAM WRAPPER (in Widget)
+   ============================================ */
+
+.mle-diagram-wrapper {
+  background: white;
+  border-radius: var(--mle-radius-md);
+  padding: 20px;
+  overflow: visible;
+  position: relative;
+  border: 1px solid var(--mle-border-color);
+  min-height: 300px;
+}
+
+.mle-diagram-wrapper svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  cursor: grab;
+  transform-origin: center center;
+}
+
+.mle-diagram-wrapper svg:active {
+  cursor: grabbing;
+}
+
+/* ============================================
+   MERMAID NODE INTERACTIONS
+   ============================================ */
+
+/* Make nodes interactive */
+.mle-diagram-wrapper .node,
+.mle-diagram-wrapper .nodeLabel {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.mle-diagram-wrapper .node:hover,
+.mle-diagram-wrapper .nodeLabel:hover {
+  opacity: 0.8;
+}
+
+/* Highlighted nodes (from InteractiveDiagram) */
+.mle-highlighted {
+  filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.8)) !important;
+  transition: filter 0.2s ease !important;
+}
+
+/* ============================================
+   FEEDBACK TOAST
+   ============================================ */
+
+.mle-feedback {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(34, 197, 94, 0.95);
+  color: white;
+  padding: 10px 20px;
+  border-radius: var(--mle-radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: var(--mle-shadow-lg);
+  animation: slideUpFade 0.3s ease;
+  z-index: 100;
+  pointer-events: none;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ============================================
+   ZOOM INDICATOR (Optional Enhancement)
+   ============================================ */
+
+.mle-zoom-indicator {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 12px;
+  border-radius: var(--mle-radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.mle-zoom-indicator.visible {
+  opacity: 1;
+}
+
+/* ============================================
+   DIAGRAM TYPES SPECIFIC STYLES
+   ============================================ */
+
+/* Flowchart specific */
+.mle-diagram-wrapper[data-type="flowchart"] .node rect {
+  rx: 6;
+}
+
+/* Mind map specific */
+.mle-diagram-wrapper[data-type="mindmap"] .mindmap-node {
+  transition: transform 0.2s ease;
+}
+
+.mle-diagram-wrapper[data-type="mindmap"] .mindmap-node:hover {
+  transform: scale(1.05);
+}
+
+/* Timeline specific */
+.mle-diagram-wrapper[data-type="timeline"] .section {
+  transition: opacity 0.2s ease;
+}
+
+.mle-diagram-wrapper[data-type="timeline"] .section:hover {
+  opacity: 0.9;
+}
+
+/* ============================================
+   LOADING STATE
+   ============================================ */
+
+.mle-diagram-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.mle-diagram-loading .mle-spinner {
+  /* Uses spinner from common.css */
+  width: 40px;
+  height: 40px;
+}
+
+.mle-diagram-loading p {
+  margin: 0;
+  color: var(--mle-text-secondary);
+  font-size: 14px;
+}
+
+/* ============================================
+   ERROR STATE
+   ============================================ */
+
+.mle-diagram-error {
+  background: rgba(239, 68, 68, 0.05);
+  border: 2px dashed rgba(239, 68, 68, 0.3);
+  border-radius: var(--mle-radius-md);
+  padding: 30px;
+  text-align: center;
+}
+
+.mle-diagram-error h4 {
+  margin: 0 0 12px 0;
+  color: #dc2626;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.mle-diagram-error p {
+  margin: 0 0 16px 0;
+  color: var(--mle-text-secondary);
+  font-size: 14px;
+}
+
+.mle-diagram-error details {
+  margin-top: 16px;
+  text-align: left;
+}
+
+.mle-diagram-error summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--mle-text-primary);
+  margin-bottom: 8px;
+}
+
+.mle-diagram-error pre {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 12px;
+  border-radius: var(--mle-radius-sm);
+  overflow-x: auto;
+  font-size: 12px;
+  text-align: left;
+  margin: 8px 0 0 0;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 600px) {
+  .mle-diagram-wrapper {
+    padding: 12px;
+  }
+
+  .mle-diagram-controls {
+    top: 8px;
+    right: 8px;
+  }
+
+  .mle-control-group {
+    padding: 4px;
+  }
+
+  .mle-control-btn {
+    min-width: 36px;
+    min-height: 32px;
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+
+  .mle-diagram-wrapper svg {
+    max-width: 100%;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+.mle-control-btn:focus {
+  outline: 2px solid var(--mle-primary);
+  outline-offset: 2px;
+}
+
+.mle-diagram-wrapper .node:focus,
+.mle-diagram-wrapper .nodeLabel:focus {
+  outline: 2px solid var(--mle-primary);
+  outline-offset: 2px;
+}
+
+/* Screen reader only text */
+.mle-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  .mle-diagram-controls {
+    display: none;
+  }
+
+  .mle-diagram-wrapper {
+    border: 1px solid #ccc;
+    page-break-inside: avoid;
+  }
+
+  .mle-diagram-wrapper svg {
+    max-width: 100%;
+  }
+}
