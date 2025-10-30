@@ -3,8 +3,8 @@
  * Handles extension lifecycle, context menus, and message routing
  */
 
-// Import storage manager
-importScripts('lib/storage.js');
+// Import storage manager (absolute path from extension root)
+importScripts('/lib/storage.js');
 
 // Context menu IDs
 const CONTEXT_MENU_IDS = {
@@ -21,8 +21,16 @@ const CONTEXT_MENU_IDS = {
 chrome.runtime.onInstalled.addListener(async (details) => {
   console.log('Multimodal Learning Enhancer installed:', details.reason);
 
-  // Initialize storage
-  await StorageManager.initialize();
+  // Verify StorageManager loaded
+  console.log('[ServiceWorker] StorageManager type:', typeof StorageManager);
+  console.log('[ServiceWorker] StorageManager.initialize type:', typeof StorageManager?.initialize);
+
+  // Initialize storage (if method exists)
+  if (StorageManager && typeof StorageManager.initialize === 'function') {
+    await StorageManager.initialize();
+  } else {
+    console.warn('[ServiceWorker] StorageManager.initialize not available, skipping initialization');
+  }
 
   // Create context menus
   createContextMenus();

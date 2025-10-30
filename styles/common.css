@@ -23,11 +23,26 @@
   --mle-gray-700: #2d3748;
   --mle-gray-800: #1a202c;
 
+  /* Background colors */
+  --mle-bg-primary: #ffffff;
+  --mle-bg-secondary: #f7fafc;
+  --mle-bg-tertiary: #edf2f7;
+
+  /* Text colors */
+  --mle-text-primary: #1a202c;
+  --mle-text-secondary: #4a5568;
+  --mle-text-muted: #718096;
+
+  /* Border colors */
+  --mle-border-color: #e2e8f0;
+  --mle-border-light: #edf2f7;
+
   --mle-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
   --mle-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
   --mle-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
   --mle-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.2);
+  --mle-shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.3);
 
   --mle-radius-sm: 4px;
   --mle-radius-md: 8px;

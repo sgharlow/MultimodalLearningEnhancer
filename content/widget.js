@@ -7,7 +7,7 @@ class Widget {
   constructor() {
     this.container = null;
     this.isVisible = false;
-    this.currentTab = 'visual';
+    this.currentTab = 'summary'; // Changed from 'visual' to 'summary'
     this.results = {
       visual: null,
       summary: null,
@@ -53,22 +53,22 @@ class Widget {
         </div>
 
         <div class="mle-widget-tabs">
-          <button class="mle-tab" data-tab="visual">📊 Diagram</button>
           <button class="mle-tab" data-tab="summary">📝 Summary</button>
+          <button class="mle-tab" data-tab="visual">📊 Diagram</button>
           <button class="mle-tab" data-tab="studynotes">🎯 Study Notes</button>
           <button class="mle-tab" data-tab="cornell">📔 Cornell Notes</button>
         </div>
 
         <div class="mle-widget-body">
-          <div class="mle-tab-content" data-tab="visual">
+          <div class="mle-tab-content" data-tab="summary">
             <div class="mle-empty-state">
-              Generate a diagram to see it here
+              Generate a summary to see it here
             </div>
           </div>
 
-          <div class="mle-tab-content" data-tab="summary" style="display: none;">
+          <div class="mle-tab-content" data-tab="visual" style="display: none;">
             <div class="mle-empty-state">
-              Generate a summary to see it here
+              Generate a diagram to see it here
             </div>
           </div>
 
@@ -83,10 +83,6 @@ class Widget {
               Generate Cornell notes to see them here
             </div>
           </div>
-        </div>
-
-        <div class="mle-widget-footer">
-          <button class="mle-footer-btn" data-action="new">✨ New Transformation</button>
         </div>
       </div>
     `;
@@ -109,11 +105,6 @@ class Widget {
         this.switchTab(tab.dataset.tab);
       };
     });
-
-    // New transformation button
-    this.container.querySelector('[data-action="new"]').onclick = () => {
-      this.clearResults();
-    };
 
     // Make header draggable
     this.makeDraggable();
@@ -171,16 +162,9 @@ class Widget {
     if (!this.container) this.init();
 
     this.container.style.display = 'block';
+    this.container.style.opacity = '1';
+    this.container.style.transform = 'scale(1)';
     this.isVisible = true;
-
-    // Animate in
-    this.container.style.opacity = '0';
-    this.container.style.transform = 'scale(0.9)';
-    setTimeout(() => {
-      this.container.style.transition = 'all 0.2s ease';
-      this.container.style.opacity = '1';
-      this.container.style.transform = 'scale(1)';
-    }, 10);
 
     console.log('[Widget] Shown');
   }
@@ -233,7 +217,7 @@ class Widget {
    * Display transformation results
    */
   async displayResults(result, type) {
-    console.log('[Widget] Displaying results:', type);
+    console.log('[Widget] displayResults called with type:', type, 'result:', result);
 
     // Normalize type (handle both 'cornell' and 'cornell-notes')
     const normalizedType = type === 'cornell-notes' ? 'cornell' : type;
@@ -243,9 +227,14 @@ class Widget {
 
     // Get tab content container
     const tabContent = this.container.querySelector(`[data-tab="${normalizedType}"]`);
+    console.log('[Widget] Tab content found:', !!tabContent, 'for type:', normalizedType);
 
-    // Show loading state
-    this.showLoading(tabContent);
+    if (!tabContent) {
+      console.error('[Widget] Could not find tab content for:', normalizedType);
+      console.error('[Widget] Container:', this.container);
+      console.error('[Widget] All tabs:', this.container.querySelectorAll('.mle-tab-content'));
+      return;
+    }
 
     // Build content based on type
     try {
@@ -256,7 +245,9 @@ class Widget {
           content = await this.buildVisualContent(result);
           break;
         case 'summary':
+          console.log('[Widget] Building summary, result.content:', result.content?.substring(0, 100));
           content = this.buildSummaryContent(result);
+          console.log('[Widget] Summary HTML built, length:', content?.length);
           break;
         case 'studynotes':
           content = this.buildStudyNotesContent(result);
@@ -268,21 +259,29 @@ class Widget {
           content = '<div class="mle-error">Unknown result type</div>';
       }
 
+      console.log('[Widget] Setting innerHTML, content length:', content?.length);
       tabContent.innerHTML = content;
+      console.log('[Widget] innerHTML set, tabContent.innerHTML length:', tabContent.innerHTML.length);
+
+      // Set up copy button if needed
+      if (this._setupCopyButton) {
+        this._setupCopyButton();
+        this._setupCopyButton = null;
+      }
 
       // If visual, initialize interactivity
       if (normalizedType === 'visual') {
         await this.initializeInteractiveDiagram(tabContent, result.mermaidCode);
       }
 
-      // Switch to this tab
+      // Switch to this tab and show widget
+      console.log('[Widget] Switching to tab and showing widget');
       this.switchTab(normalizedType);
-
-      // Show widget
       this.show();
+      console.log('[Widget] Display complete');
 
     } catch (error) {
-      console.error('[Widget] Failed to display results:', error);
+      console.error('[Widget] Failed to display results:', error, error.stack);
       tabContent.innerHTML = `
         <div class="mle-error">
           <p>Failed to display results: ${error.message}</p>
@@ -295,124 +294,129 @@ class Widget {
    * Build visual content (diagram)
    */
   async buildVisualContent(result) {
-    const { title, mermaidCode, diagramType } = result;
+    const { mermaidCode, diagramType, metadata } = result;
+    const contentId = `mle-content-${Date.now()}`;
 
-    // Create container for diagram
-    const diagramId = `mle-diagram-${Date.now()}`;
+    const isDemo = metadata && metadata.source === 'demo-mode';
 
-    try {
-      // Use VisualEngine to render
-      const visualEngine = new VisualEngine();
-      await visualEngine.initialize();
+    const html = `
+      <div class="mle-content-header">
+        <span class="mle-word-count">${diagramType}${isDemo ? ' (Demo)' : ''}</span>
+        <button class="mle-copy-btn-mini" onclick="navigator.clipboard.writeText(\`${mermaidCode.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`).then(() => { this.textContent='✅'; setTimeout(()=>this.textContent='📋',2000); })" title="Copy code">📋</button>
+      </div>
+      <div class="mle-diagram-wrapper">
+        <pre style="background: #f7fafc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.4; border: 1px solid #e2e8f0; margin: 0;"><code>${this.escapeHtml(mermaidCode)}</code></pre>
+        <p style="color: var(--mle-text-secondary); margin: 10px 0 0 0; font-size: 12px;">
+          💡 Paste into <a href="https://mermaid.live" target="_blank" style="color: var(--mle-primary);">mermaid.live</a> to visualize
+        </p>
+      </div>
+    `;
 
-      const { svg } = await visualEngine.renderDiagram(mermaidCode, diagramId);
-
-      return `
-        <div class="mle-result-header">
-          <h3>${title || 'Diagram'}</h3>
-          <span class="mle-badge">${diagramType}</span>
-        </div>
-        <div class="mle-diagram-wrapper" id="${diagramId}-wrapper">
-          ${svg}
-        </div>
-      `;
-    } catch (error) {
-      console.error('[Widget] Diagram rendering failed:', error);
-      return `
-        <div class="mle-result-header">
-          <h3>${title || 'Diagram'}</h3>
-        </div>
-        <div class="mle-error">
-          <p>Failed to render diagram: ${error.message}</p>
-          <details>
-            <summary>Mermaid Code</summary>
-            <pre>${mermaidCode}</pre>
-          </details>
-        </div>
-      `;
-    }
+    return html;
   }
 
   /**
    * Build summary content
    */
   buildSummaryContent(result) {
-    const { title, content, metadata } = result;
+    const { content, metadata } = result;
 
-    return `
-      <div class="mle-result-header">
-        <h3>${title || 'Summary'}</h3>
-        <div class="mle-meta">
-          <span>${metadata.wordCount} words</span>
-          <span>•</span>
-          <span>${metadata.readingTime} min read</span>
-          <span>•</span>
-          <span>${(metadata.compressionRatio * 100).toFixed(0)}% of original</span>
-        </div>
+    // Store content for copy button
+    const contentId = `mle-content-${Date.now()}`;
+
+    // Clean, minimal design - just the content
+    const html = `
+      <div class="mle-content-header">
+        <span class="mle-word-count">${metadata?.wordCount || 'N/A'} words</span>
+        <button class="mle-copy-btn-mini" data-content-id="${contentId}" title="Copy to clipboard">📋</button>
       </div>
-      <div class="mle-text-content">
+      <div class="mle-text-content" id="${contentId}">
         ${this.formatMarkdown(content)}
       </div>
-      <div class="mle-actions">
-        <button class="mle-action-btn" onclick="navigator.clipboard.writeText(\`${content.replace(/`/g, '\\`')}\`)">
-          📋 Copy
-        </button>
-      </div>
     `;
+
+    // Store original content for copying
+    this._setupCopyButton = () => {
+      const copyBtn = this.container.querySelector(`[data-content-id="${contentId}"]`);
+      if (copyBtn && !copyBtn.onclick) {
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(content).then(() => {
+            copyBtn.textContent = '✅';
+            setTimeout(() => { copyBtn.textContent = '📋'; }, 2000);
+          }).catch(err => {
+            console.error('[Widget] Copy failed:', err);
+            copyBtn.textContent = '❌';
+            setTimeout(() => { copyBtn.textContent = '📋'; }, 2000);
+          });
+        };
+      }
+    };
+
+    return html;
   }
 
   /**
    * Build study notes content
    */
   buildStudyNotesContent(result) {
-    const { title, content, metadata, structure } = result;
+    const { content, metadata } = result;
+    const contentId = `mle-content-${Date.now()}`;
 
-    return `
-      <div class="mle-result-header">
-        <h3>${title || 'Study Notes'}</h3>
-        <div class="mle-meta">
-          <span>${metadata.wordCount} words</span>
-          <span>•</span>
-          <span>${structure?.sections || 0} sections</span>
-        </div>
+    const html = `
+      <div class="mle-content-header">
+        <span class="mle-word-count">${metadata?.wordCount || 'N/A'} words</span>
+        <button class="mle-copy-btn-mini" data-content-id="${contentId}" title="Copy to clipboard">📋</button>
       </div>
-      <div class="mle-text-content mle-study-notes">
+      <div class="mle-text-content mle-study-notes" id="${contentId}">
         ${this.formatMarkdown(content)}
       </div>
-      <div class="mle-actions">
-        <button class="mle-action-btn" onclick="navigator.clipboard.writeText(\`${content.replace(/`/g, '\\`')}\`)">
-          📋 Copy
-        </button>
-      </div>
     `;
+
+    this._setupCopyButton = () => {
+      const copyBtn = this.container.querySelector(`[data-content-id="${contentId}"]`);
+      if (copyBtn && !copyBtn.onclick) {
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(content).then(() => {
+            copyBtn.textContent = '✅';
+            setTimeout(() => { copyBtn.textContent = '📋'; }, 2000);
+          });
+        };
+      }
+    };
+
+    return html;
   }
 
   /**
    * Build Cornell Notes content
    */
   buildCornellNotesContent(result) {
-    const { title, content, metadata, structure } = result;
+    const { content, metadata } = result;
+    const contentId = `mle-content-${Date.now()}`;
 
-    return `
-      <div class="mle-result-header">
-        <h3>${title || 'Cornell Notes'}</h3>
-        <div class="mle-meta">
-          <span>${metadata.wordCount} words</span>
-          <span>•</span>
-          <span>${structure?.cuePairs || 0} cue pairs</span>
-          ${structure?.hasSummary ? '<span>•</span><span>✓ Summary</span>' : ''}
-          ${metadata.fallback ? '<span>•</span><span class="mle-badge">Fallback</span>' : ''}
-        </div>
+    const html = `
+      <div class="mle-content-header">
+        <span class="mle-word-count">${metadata?.wordCount || 'N/A'} words</span>
+        <button class="mle-copy-btn-mini" data-content-id="${contentId}" title="Copy to clipboard">📋</button>
       </div>
-      <div class="mle-text-content mle-cornell-notes">
+      <div class="mle-text-content mle-cornell-notes" id="${contentId}">
         ${this.formatMarkdown(content)}
       </div>
-      <div class="mle-actions">
-        <button class="mle-action-btn" onclick="navigator.clipboard.writeText(\`${content.replace(/`/g, '\\`')}\`)">
-          📋 Copy
-        </button>
-      </div>
     `;
+
+    this._setupCopyButton = () => {
+      const copyBtn = this.container.querySelector(`[data-content-id="${contentId}"]`);
+      if (copyBtn && !copyBtn.onclick) {
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(content).then(() => {
+            copyBtn.textContent = '✅';
+            setTimeout(() => { copyBtn.textContent = '📋'; }, 2000);
+          });
+        };
+      }
+    };
+
+    return html;
   }
 
   /**
@@ -438,36 +442,114 @@ class Widget {
   formatMarkdown(text) {
     if (!text) return '';
 
-    // Simple markdown formatting
-    let html = text
+    // Process line by line to properly handle different elements
+    const lines = text.split('\n');
+    let html = '';
+    let inList = false;
+    let currentParagraph = '';
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      // Empty line - close current paragraph or list
+      if (!line) {
+        if (inList) {
+          html += '</ul>';
+          inList = false;
+        }
+        if (currentParagraph) {
+          html += `<p>${currentParagraph}</p>`;
+          currentParagraph = '';
+        }
+        continue;
+      }
+
       // Headers
-      .replace(/^### (.*?)$/gm, '<h4>$1</h4>')
-      .replace(/^## (.*?)$/gm, '<h3>$1</h3>')
-      .replace(/^# (.*?)$/gm, '<h2>$1</h2>')
-      // Bold
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      // Lists
-      .replace(/^[•\-\*] (.*)$/gm, '<li>$1</li>')
-      // Wrap lists
-      .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
-      // Paragraphs
-      .split('\n\n')
-      .map(para => para.trim() ? `<p>${para}</p>` : '')
-      .join('');
+      if (line.startsWith('### ')) {
+        if (inList) { html += '</ul>'; inList = false; }
+        if (currentParagraph) { html += `<p>${currentParagraph}</p>`; currentParagraph = ''; }
+        html += `<h4>${line.substring(4)}</h4>`;
+      } else if (line.startsWith('## ')) {
+        if (inList) { html += '</ul>'; inList = false; }
+        if (currentParagraph) { html += `<p>${currentParagraph}</p>`; currentParagraph = ''; }
+        html += `<h3>${line.substring(3)}</h3>`;
+      } else if (line.startsWith('# ')) {
+        if (inList) { html += '</ul>'; inList = false; }
+        if (currentParagraph) { html += `<p>${currentParagraph}</p>`; currentParagraph = ''; }
+        html += `<h2>${line.substring(2)}</h2>`;
+      }
+      // List items
+      else if (line.startsWith('- ') || line.startsWith('• ') || line.startsWith('* ')) {
+        if (currentParagraph) { html += `<p>${currentParagraph}</p>`; currentParagraph = ''; }
+        if (!inList) {
+          html += '<ul>';
+          inList = true;
+        }
+        const content = line.substring(2).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        html += `<li>${content}</li>`;
+      }
+      // Horizontal rule
+      else if (line === '---' || line === '***') {
+        if (inList) { html += '</ul>'; inList = false; }
+        if (currentParagraph) { html += `<p>${currentParagraph}</p>`; currentParagraph = ''; }
+        html += '<hr style="margin: 20px 0; border: none; border-top: 1px solid var(--mle-border-color);">';
+      }
+      // Regular paragraph text
+      else {
+        if (inList) { html += '</ul>'; inList = false; }
+        const formatted = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        if (currentParagraph) {
+          currentParagraph += ' ' + formatted;
+        } else {
+          currentParagraph = formatted;
+        }
+      }
+    }
+
+    // Close any open tags
+    if (inList) html += '</ul>';
+    if (currentParagraph) html += `<p>${currentParagraph}</p>`;
 
     return html;
   }
 
   /**
-   * Show loading state
+   * Escape HTML to prevent XSS and display code properly
    */
-  showLoading(container) {
-    container.innerHTML = `
+  escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  /**
+   * Show loading state (can be called with tab type or container)
+   */
+  showLoading(typeOrContainer) {
+    const loadingHTML = `
       <div class="mle-loading">
         <div class="mle-spinner"></div>
         <p>Generating...</p>
       </div>
     `;
+
+    // If called with a DOM element (container)
+    if (typeOrContainer instanceof HTMLElement) {
+      typeOrContainer.innerHTML = loadingHTML;
+      return;
+    }
+
+    // If called with a type string, show widget with loading state
+    const type = typeOrContainer;
+    const normalizedType = type === 'cornell-notes' ? 'cornell' : type;
+    const tabContent = this.container?.querySelector(`[data-tab="${normalizedType}"]`);
+
+    if (tabContent) {
+      tabContent.innerHTML = loadingHTML;
+      this.switchTab(normalizedType);
+      this.show();
+    }
   }
 
   /**

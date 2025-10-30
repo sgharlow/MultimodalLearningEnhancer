@@ -50,10 +50,8 @@
       diagramGenerator = new DiagramGenerator(chromeAI);
       visualEngine = new VisualEngine();
 
-      // Pre-initialize visual engine (loads Mermaid)
-      visualEngine.initialize().catch(err => {
-        console.warn('[MLE] Visual engine initialization delayed:', err.message);
-      });
+      // Don't pre-load Mermaid - load it only when needed for diagrams
+      // This speeds up initial page load significantly
 
       // Initialize widget
       widget = new Widget();
@@ -113,6 +111,9 @@
         source: sourceType
       });
 
+      // Show widget with loading state IMMEDIATELY
+      showLoadingState(transformationType);
+
       // Extract content
       const extraction = await extractContent(sourceType, selectionText);
 
@@ -121,9 +122,6 @@
 
       // Store for potential reuse
       lastExtraction = { extraction, analysis };
-
-      // Show loading notification
-      showNotification('Transforming content...', 'info');
 
       // Perform transformation based on type
       let result;
@@ -232,22 +230,43 @@
       // Check API availability
       await diagramGenerator.checkAPIAvailable();
 
-      // Generate diagram
+      // Generate diagram with real AI
       const result = await diagramGenerator.generate(extraction, analysis);
-
-      // Render diagram to validate
-      await visualEngine.renderDiagram(result.mermaidCode);
 
       console.log('[MLE] Visual diagram generated successfully:', {
         type: result.diagramType,
-        lines: result.metadata.diagramLines,
-        confidence: result.metadata.confidence
+        source: result.metadata?.source || 'chrome-ai',
+        lines: result.metadata?.diagramLines,
+        confidence: result.metadata?.confidence
       });
 
       return result;
 
     } catch (error) {
       console.error('[MLE] Visual transformation failed:', error);
+
+      // Fallback to demo mode
+      if (DemoMode && DemoMode.isEnabled()) {
+        console.log('[MLE] Using demo mode for diagram generation');
+        const mermaidCode = DemoMode.getMockDiagram(extraction.content);
+        const diagramType = analysis.recommendedDiagram || 'flowchart';
+
+        return {
+          type: 'visual',
+          diagramType: diagramType,
+          title: extraction.title,
+          mermaidCode: mermaidCode,
+          metadata: {
+            originalLength: extraction.content.length,
+            diagramLines: mermaidCode.split('\n').length,
+            diagramType: diagramType,
+            confidence: 0.8,
+            source: 'demo-mode',
+            generatedAt: Date.now()
+          }
+        };
+      }
+
       throw error;
     }
   }
@@ -276,6 +295,28 @@
 
     } catch (error) {
       console.error('[MLE] Summary transformation failed:', error);
+
+      // Fallback to demo mode (only if Summarizer API fails)
+      if (DemoMode && DemoMode.isEnabled()) {
+        console.log('[MLE] Using demo mode for summary generation');
+        const mockSummary = DemoMode.getMockSummary(extraction.content);
+
+        return {
+          type: 'bullet-points',
+          title: extraction.title,
+          content: mockSummary,
+          metadata: {
+            originalLength: extraction.content.length,
+            summaryLength: mockSummary.length,
+            compressionRatio: (mockSummary.length / extraction.content.length).toFixed(2),
+            wordCount: Utils.wordCount(mockSummary),
+            readingTime: Utils.estimateReadingTime(mockSummary),
+            source: 'demo-mode',
+            generatedAt: Date.now()
+          }
+        };
+      }
+
       throw error;
     }
   }
@@ -304,6 +345,35 @@
 
     } catch (error) {
       console.error('[MLE] Study notes transformation failed:', error);
+
+      // Fallback to demo mode
+      if (DemoMode && DemoMode.isEnabled()) {
+        console.log('[MLE] Using demo mode for study notes generation');
+        const mockNotes = DemoMode.getMockStudyNotes(extraction.content);
+
+        return {
+          type: 'study-notes',
+          title: extraction.title,
+          content: mockNotes,
+          metadata: {
+            originalLength: extraction.content.length,
+            notesLength: mockNotes.length,
+            wordCount: Utils.wordCount(mockNotes),
+            readingTime: Utils.estimateReadingTime(mockNotes),
+            source: 'demo-mode',
+            generatedAt: Date.now()
+          },
+          structure: {
+            sections: 4,
+            subsections: 0,
+            lists: 10,
+            hasOverview: true,
+            hasKeyConcepts: true,
+            hasKeyTerms: true
+          }
+        };
+      }
+
       throw error;
     }
   }
@@ -331,8 +401,44 @@
 
     } catch (error) {
       console.error('[MLE] Cornell Notes transformation failed:', error);
+
+      // Fallback to demo mode
+      if (DemoMode && DemoMode.isEnabled()) {
+        console.log('[MLE] Using demo mode for Cornell notes generation');
+        const mockNotes = DemoMode.getMockCornellNotes(extraction.content);
+
+        return {
+          type: 'cornell-notes',
+          title: extraction.title,
+          content: mockNotes,
+          metadata: {
+            originalLength: extraction.content.length,
+            notesLength: mockNotes.length,
+            wordCount: Utils.wordCount(mockNotes),
+            readingTime: Utils.estimateReadingTime(mockNotes),
+            source: 'demo-mode',
+            generatedAt: Date.now()
+          },
+          structure: {
+            cuePairs: 7,
+            hasSummary: true
+          }
+        };
+      }
+
       throw error;
     }
+  }
+
+  /**
+   * Show loading state in widget immediately
+   */
+  function showLoadingState(type) {
+    if (!widget) {
+      widget = new Widget();
+      widget.init();
+    }
+    widget.showLoading(type);
   }
 
   /**
@@ -349,24 +455,30 @@
     widget.displayResults(result, type);
 
     // Also log to console for debugging
-    console.log('[MLE] Transformation Results:');
-    console.log('─'.repeat(60));
-    console.log(`Type: ${type.toUpperCase()}`);
-    console.log(`Title: ${result.title || 'N/A'}`);
-    console.log('─'.repeat(60));
+    console.log('[MLE] ═══════════════ RESULTS ═══════════════');
+    console.log(`[MLE] Type: ${type.toUpperCase()}`);
+    console.log(`[MLE] Title: ${result.title || 'N/A'}`);
+    console.log('[MLE] ════════════════════════════════════════');
 
-    if (type === 'summary' || type === 'studynotes') {
-      console.log('Metadata:', result.metadata);
+    if (type === 'summary' || type === 'studynotes' || type === 'cornell') {
+      console.log('[MLE] Content:');
+      console.log(result.content);
+      console.log('[MLE] ────────────────────────────────────────');
+      console.log('[MLE] Metadata:', result.metadata);
       if (result.structure) {
-        console.log('Structure:', result.structure);
+        console.log('[MLE] Structure:', result.structure);
       }
     } else if (type === 'visual') {
-      console.log(`Diagram Type: ${result.diagramType}`);
-      console.log('Metadata:', result.metadata);
+      console.log(`[MLE] Diagram Type: ${result.diagramType}`);
+      console.log('[MLE] Mermaid Code:');
+      console.log(result.mermaidCode);
+      console.log('[MLE] ────────────────────────────────────────');
+      console.log('[MLE] Metadata:', result.metadata);
     }
 
-    console.log('─'.repeat(60));
-    console.log('[MLE] Results displayed in widget!');
+    console.log('[MLE] ════════════════════════════════════════');
+    console.log('[MLE] ✅ Widget should be visible in top-right corner');
+    console.log('[MLE] ════════════════════════════════════════');
   }
 
   /**
