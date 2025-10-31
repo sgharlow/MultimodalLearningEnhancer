@@ -53,9 +53,22 @@
     }
   ],
 
+  "icons": {
+    "16": "assets/icons/icon-512.png",
+    "32": "assets/icons/icon-512.png",
+    "48": "assets/icons/icon-512.png",
+    "128": "assets/icons/icon-512.png"
+  },
+
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "Multimodal Learning Enhancer"
+    "default_title": "Multimodal Learning Enhancer",
+    "default_icon": {
+      "16": "assets/icons/icon-512.png",
+      "32": "assets/icons/icon-512.png",
+      "48": "assets/icons/icon-512.png",
+      "128": "assets/icons/icon-512.png"
+    }
   },
 
   "web_accessible_resources": [

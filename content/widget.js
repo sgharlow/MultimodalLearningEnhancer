@@ -48,40 +48,33 @@ class Widget {
     this.container.innerHTML = `
       <div class="mle-widget-container">
         <div class="mle-widget-header">
-          <h2 class="mle-widget-title">🧠 Learning Enhancer</h2>
+          <h2 class="mle-widget-title">Learning Enhancer</h2>
           <button class="mle-close-btn" title="Close">×</button>
         </div>
 
-        <div class="mle-widget-tabs">
-          <button class="mle-tab" data-tab="summary">📝 Summary</button>
-          <button class="mle-tab" data-tab="visual">📊 Diagram</button>
-          <button class="mle-tab" data-tab="studynotes">🎯 Study Notes</button>
-          <button class="mle-tab" data-tab="cornell">📔 Cornell Notes</button>
+        <div class="mle-widget-body">
+          <div class="mle-content-area">
+            <div class="mle-empty-state">
+              Select content and right-click to generate transformations
+            </div>
+          </div>
         </div>
 
-        <div class="mle-widget-body">
-          <div class="mle-tab-content" data-tab="summary">
-            <div class="mle-empty-state">
-              Generate a summary to see it here
-            </div>
-          </div>
-
-          <div class="mle-tab-content" data-tab="visual" style="display: none;">
-            <div class="mle-empty-state">
-              Generate a diagram to see it here
-            </div>
-          </div>
-
-          <div class="mle-tab-content" data-tab="studynotes" style="display: none;">
-            <div class="mle-empty-state">
-              Generate study notes to see them here
-            </div>
-          </div>
-
-          <div class="mle-tab-content" data-tab="cornell" style="display: none;">
-            <div class="mle-empty-state">
-              Generate Cornell notes to see them here
-            </div>
+        <div class="mle-widget-footer">
+          <span class="mle-word-count">0 words</span>
+          <div class="mle-action-buttons">
+            <button class="mle-action-btn" data-action="summary" title="Generate Summary">
+              📝 Summary
+            </button>
+            <button class="mle-action-btn" data-action="visual" title="Generate Diagram">
+              📊 Diagram
+            </button>
+            <button class="mle-action-btn" data-action="studynotes" title="Study Notes">
+              🎯 Study Notes
+            </button>
+            <button class="mle-action-btn" data-action="cornell" title="Cornell Notes">
+              📔 Cornell Notes
+            </button>
           </div>
         </div>
       </div>
@@ -99,10 +92,11 @@ class Widget {
       this.hide();
     };
 
-    // Tab buttons
-    this.container.querySelectorAll('.mle-tab').forEach(tab => {
-      tab.onclick = () => {
-        this.switchTab(tab.dataset.tab);
+    // Action buttons at the bottom
+    this.container.querySelectorAll('.mle-action-btn').forEach(btn => {
+      btn.onclick = async () => {
+        const action = btn.dataset.action;
+        await this.triggerAction(action);
       };
     });
 
@@ -187,30 +181,64 @@ class Widget {
   }
 
   /**
-   * Switch tab
+   * Trigger action (toggle between transformations)
    */
-  switchTab(tabName) {
-    this.currentTab = tabName;
+  async triggerAction(action) {
+    console.log('[Widget] Triggering action:', action);
 
-    // Update tab buttons
-    this.container.querySelectorAll('.mle-tab').forEach(tab => {
-      if (tab.dataset.tab === tabName) {
-        tab.classList.add('active');
+    const normalizedType = action === 'cornell-notes' ? 'cornell' : action;
+
+    // If we already have this transformation cached, just switch to it
+    if (this.results[normalizedType]) {
+      console.log('[Widget] Switching to cached transformation:', normalizedType);
+      await this.displayResults(this.results[normalizedType], normalizedType);
+      this.updateButtonStates();
+      return;
+    }
+
+    // Otherwise, trigger a new generation
+    console.log('[Widget] Generating new transformation:', normalizedType);
+    try {
+      // Show loading state
+      this.showLoading(normalizedType);
+
+      // Call the global transformation function exposed by content script
+      if (window.triggerWidgetTransformation) {
+        await window.triggerWidgetTransformation(action);
       } else {
-        tab.classList.remove('active');
+        console.error('[Widget] triggerWidgetTransformation not found - content script may not be loaded');
+        throw new Error('Content script not ready');
+      }
+    } catch (error) {
+      console.error('[Widget] Failed to trigger action:', error);
+      const contentArea = this.container?.querySelector('.mle-content-area');
+      if (contentArea) {
+        contentArea.innerHTML = `<div class="mle-error"><p>Failed to generate transformation: ${error.message}</p></div>`;
+      }
+    }
+  }
+
+  /**
+   * Update button states to show active and available transformations
+   */
+  updateButtonStates() {
+    if (!this.container) return;
+
+    const buttons = this.container.querySelectorAll('.mle-action-btn');
+    buttons.forEach(btn => {
+      const action = btn.dataset.action;
+      const normalizedType = action === 'cornell-notes' ? 'cornell' : action;
+
+      // Remove all state classes
+      btn.classList.remove('active', 'available');
+
+      // Add appropriate state class
+      if (normalizedType === this.currentTab) {
+        btn.classList.add('active');
+      } else if (this.results[normalizedType]) {
+        btn.classList.add('available');
       }
     });
-
-    // Update tab content
-    this.container.querySelectorAll('.mle-tab-content').forEach(content => {
-      if (content.dataset.tab === tabName) {
-        content.style.display = 'block';
-      } else {
-        content.style.display = 'none';
-      }
-    });
-
-    console.log('[Widget] Switched to tab:', tabName);
   }
 
   /**
@@ -224,44 +252,60 @@ class Widget {
 
     // Store results
     this.results[normalizedType] = result;
+    this.currentTab = normalizedType;
 
-    // Get tab content container
-    const tabContent = this.container.querySelector(`[data-tab="${normalizedType}"]`);
-    console.log('[Widget] Tab content found:', !!tabContent, 'for type:', normalizedType);
+    // Get content area container
+    const contentArea = this.container.querySelector('.mle-content-area');
+    console.log('[Widget] Content area found:', !!contentArea);
 
-    if (!tabContent) {
-      console.error('[Widget] Could not find tab content for:', normalizedType);
-      console.error('[Widget] Container:', this.container);
-      console.error('[Widget] All tabs:', this.container.querySelectorAll('.mle-tab-content'));
+    if (!contentArea) {
+      console.error('[Widget] Could not find content area');
       return;
     }
 
     // Build content based on type
     try {
       let content;
+      let title = '';
 
       switch (normalizedType) {
         case 'visual':
           content = await this.buildVisualContent(result);
+          title = result.title || result.metadata?.title || 'Diagram';
           break;
         case 'summary':
           console.log('[Widget] Building summary, result.content:', result.content?.substring(0, 100));
           content = this.buildSummaryContent(result);
+          title = result.title || result.metadata?.title || 'Summary';
           console.log('[Widget] Summary HTML built, length:', content?.length);
           break;
         case 'studynotes':
           content = this.buildStudyNotesContent(result);
+          title = result.title || result.metadata?.title || 'Study Notes';
           break;
         case 'cornell':
           content = this.buildCornellNotesContent(result);
+          title = result.title || result.metadata?.title || 'Cornell Notes';
           break;
         default:
           content = '<div class="mle-error">Unknown result type</div>';
+          title = 'Error';
       }
 
       console.log('[Widget] Setting innerHTML, content length:', content?.length);
-      tabContent.innerHTML = content;
-      console.log('[Widget] innerHTML set, tabContent.innerHTML length:', tabContent.innerHTML.length);
+      contentArea.innerHTML = `
+        <div class="mle-content-title">${title}</div>
+        <div class="mle-content-body">
+          ${content}
+        </div>
+      `;
+      console.log('[Widget] innerHTML set');
+
+      // Update word count in footer
+      const wordCountEl = this.container.querySelector('.mle-word-count');
+      if (wordCountEl && result.metadata?.wordCount) {
+        wordCountEl.textContent = `${result.metadata.wordCount} words`;
+      }
 
       // Set up copy button if needed
       if (this._setupCopyButton) {
@@ -271,18 +315,23 @@ class Widget {
 
       // If visual, initialize interactivity
       if (normalizedType === 'visual') {
-        await this.initializeInteractiveDiagram(tabContent, result.mermaidCode);
+        const diagramWrapper = contentArea.querySelector('.mle-diagram-wrapper');
+        if (diagramWrapper) {
+          await this.initializeInteractiveDiagram(diagramWrapper, result.mermaidCode);
+        }
       }
 
-      // Switch to this tab and show widget
-      console.log('[Widget] Switching to tab and showing widget');
-      this.switchTab(normalizedType);
+      // Update button states
+      this.updateButtonStates();
+
+      // Show widget
+      console.log('[Widget] Showing widget');
       this.show();
       console.log('[Widget] Display complete');
 
     } catch (error) {
       console.error('[Widget] Failed to display results:', error, error.stack);
-      tabContent.innerHTML = `
+      contentArea.innerHTML = `
         <div class="mle-error">
           <p>Failed to display results: ${error.message}</p>
         </div>
@@ -294,16 +343,11 @@ class Widget {
    * Build visual content (diagram)
    */
   async buildVisualContent(result) {
-    const { mermaidCode, diagramType, metadata } = result;
-    const contentId = `mle-content-${Date.now()}`;
-
+    const { mermaidCode, metadata } = result;
     const isDemo = metadata && metadata.source === 'demo-mode';
 
     const html = `
-      <div class="mle-content-header">
-        <span class="mle-word-count">${diagramType}${isDemo ? ' (Demo)' : ''}</span>
-        <button class="mle-copy-btn-mini" onclick="navigator.clipboard.writeText(\`${mermaidCode.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`).then(() => { this.textContent='✅'; setTimeout(()=>this.textContent='📋',2000); })" title="Copy code">📋</button>
-      </div>
+      ${isDemo ? '<div class="mle-demo-badge">Demo Mode - AI APIs not available</div>' : ''}
       <div class="mle-diagram-wrapper">
         <pre style="background: #f7fafc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.4; border: 1px solid #e2e8f0; margin: 0;"><code>${this.escapeHtml(mermaidCode)}</code></pre>
         <p style="color: var(--mle-text-secondary); margin: 10px 0 0 0; font-size: 12px;">
@@ -319,38 +363,14 @@ class Widget {
    * Build summary content
    */
   buildSummaryContent(result) {
-    const { content, metadata } = result;
+    const { content } = result;
 
-    // Store content for copy button
-    const contentId = `mle-content-${Date.now()}`;
-
-    // Clean, minimal design - just the content
+    // Clean, minimal design - just the formatted content
     const html = `
-      <div class="mle-content-header">
-        <span class="mle-word-count">${metadata?.wordCount || 'N/A'} words</span>
-        <button class="mle-copy-btn-mini" data-content-id="${contentId}" title="Copy to clipboard">📋</button>
-      </div>
-      <div class="mle-text-content" id="${contentId}">
+      <div class="mle-text-content">
         ${this.formatMarkdown(content)}
       </div>
     `;
-
-    // Store original content for copying
-    this._setupCopyButton = () => {
-      const copyBtn = this.container.querySelector(`[data-content-id="${contentId}"]`);
-      if (copyBtn && !copyBtn.onclick) {
-        copyBtn.onclick = () => {
-          navigator.clipboard.writeText(content).then(() => {
-            copyBtn.textContent = '✅';
-            setTimeout(() => { copyBtn.textContent = '📋'; }, 2000);
-          }).catch(err => {
-            console.error('[Widget] Copy failed:', err);
-            copyBtn.textContent = '❌';
-            setTimeout(() => { copyBtn.textContent = '📋'; }, 2000);
-          });
-        };
-      }
-    };
 
     return html;
   }
@@ -359,30 +379,13 @@ class Widget {
    * Build study notes content
    */
   buildStudyNotesContent(result) {
-    const { content, metadata } = result;
-    const contentId = `mle-content-${Date.now()}`;
+    const { content } = result;
 
     const html = `
-      <div class="mle-content-header">
-        <span class="mle-word-count">${metadata?.wordCount || 'N/A'} words</span>
-        <button class="mle-copy-btn-mini" data-content-id="${contentId}" title="Copy to clipboard">📋</button>
-      </div>
-      <div class="mle-text-content mle-study-notes" id="${contentId}">
+      <div class="mle-text-content mle-study-notes">
         ${this.formatMarkdown(content)}
       </div>
     `;
-
-    this._setupCopyButton = () => {
-      const copyBtn = this.container.querySelector(`[data-content-id="${contentId}"]`);
-      if (copyBtn && !copyBtn.onclick) {
-        copyBtn.onclick = () => {
-          navigator.clipboard.writeText(content).then(() => {
-            copyBtn.textContent = '✅';
-            setTimeout(() => { copyBtn.textContent = '📋'; }, 2000);
-          });
-        };
-      }
-    };
 
     return html;
   }
@@ -391,30 +394,13 @@ class Widget {
    * Build Cornell Notes content
    */
   buildCornellNotesContent(result) {
-    const { content, metadata } = result;
-    const contentId = `mle-content-${Date.now()}`;
+    const { content } = result;
 
     const html = `
-      <div class="mle-content-header">
-        <span class="mle-word-count">${metadata?.wordCount || 'N/A'} words</span>
-        <button class="mle-copy-btn-mini" data-content-id="${contentId}" title="Copy to clipboard">📋</button>
-      </div>
-      <div class="mle-text-content mle-cornell-notes" id="${contentId}">
+      <div class="mle-text-content mle-cornell-notes">
         ${this.formatMarkdown(content)}
       </div>
     `;
-
-    this._setupCopyButton = () => {
-      const copyBtn = this.container.querySelector(`[data-content-id="${contentId}"]`);
-      if (copyBtn && !copyBtn.onclick) {
-        copyBtn.onclick = () => {
-          navigator.clipboard.writeText(content).then(() => {
-            copyBtn.textContent = '✅';
-            setTimeout(() => { copyBtn.textContent = '📋'; }, 2000);
-          });
-        };
-      }
-    };
 
     return html;
   }
@@ -524,9 +510,9 @@ class Widget {
   }
 
   /**
-   * Show loading state (can be called with tab type or container)
+   * Show loading state
    */
-  showLoading(typeOrContainer) {
+  showLoading(type) {
     const loadingHTML = `
       <div class="mle-loading">
         <div class="mle-spinner"></div>
@@ -534,20 +520,9 @@ class Widget {
       </div>
     `;
 
-    // If called with a DOM element (container)
-    if (typeOrContainer instanceof HTMLElement) {
-      typeOrContainer.innerHTML = loadingHTML;
-      return;
-    }
-
-    // If called with a type string, show widget with loading state
-    const type = typeOrContainer;
-    const normalizedType = type === 'cornell-notes' ? 'cornell' : type;
-    const tabContent = this.container?.querySelector(`[data-tab="${normalizedType}"]`);
-
-    if (tabContent) {
-      tabContent.innerHTML = loadingHTML;
-      this.switchTab(normalizedType);
+    const contentArea = this.container?.querySelector('.mle-content-area');
+    if (contentArea) {
+      contentArea.innerHTML = loadingHTML;
       this.show();
     }
   }
@@ -563,9 +538,15 @@ class Widget {
       cornell: null
     };
 
-    this.container.querySelectorAll('.mle-tab-content').forEach(content => {
-      content.innerHTML = '<div class="mle-empty-state">Generate content to see it here</div>';
-    });
+    const contentArea = this.container?.querySelector('.mle-content-area');
+    if (contentArea) {
+      contentArea.innerHTML = '<div class="mle-empty-state">Select content and right-click to generate transformations</div>';
+    }
+
+    const wordCountEl = this.container?.querySelector('.mle-word-count');
+    if (wordCountEl) {
+      wordCountEl.textContent = '0 words';
+    }
 
     console.log('[Widget] Results cleared');
   }

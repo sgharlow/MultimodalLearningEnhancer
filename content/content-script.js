@@ -60,6 +60,15 @@
       isInitialized = true;
       console.log('[MLE] Initialization complete');
 
+      // Expose transformation trigger for widget buttons
+      window.triggerWidgetTransformation = async (transformationType) => {
+        console.log('[MLE] Widget triggered transformation:', transformationType);
+        return await handleTransformContent({
+          transformationType,
+          sourceType: 'widget'
+        });
+      };
+
     } catch (error) {
       console.error('[MLE] Initialization failed:', error);
     }

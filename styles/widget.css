@@ -74,43 +74,70 @@
 }
 
 /* ============================================
-   TABS
+   FOOTER
    ============================================ */
 
-.mle-widget-tabs {
+.mle-widget-footer {
   display: flex;
-  gap: 2px;
-  padding: 8px 12px 0;
-  background: var(--mle-bg-primary);
-  border-bottom: 1px solid var(--mle-border-color);
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: white;
+  border-top: 1px solid var(--mle-border-color);
+  border-radius: 0 0 var(--mle-radius-lg) var(--mle-radius-lg);
 }
 
-.mle-tab {
-  background: transparent;
-  border: none;
+.mle-widget-footer .mle-word-count {
+  font-size: 12px;
   color: var(--mle-text-secondary);
-  padding: 8px 14px;
-  font-size: 13px;
+  font-weight: 500;
+}
+
+.mle-action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.mle-action-btn {
+  background: white;
+  border: 1px solid var(--mle-border-color);
+  color: var(--mle-text-primary);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  border-radius: var(--mle-radius-md) var(--mle-radius-md) 0 0;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 3px;
   white-space: nowrap;
+  opacity: 0.6;
 }
 
-.mle-tab:hover {
-  background: rgba(102, 126, 234, 0.05);
-  color: var(--mle-primary);
+.mle-action-btn:hover {
+  opacity: 1;
+  border-color: var(--mle-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.15);
 }
 
-.mle-tab.active {
-  background: var(--mle-bg-secondary);
-  color: var(--mle-primary);
+.mle-action-btn.available {
+  opacity: 1;
+  border-color: var(--mle-border-color);
+}
+
+.mle-action-btn.active {
+  background: var(--mle-primary);
+  color: white;
+  border-color: var(--mle-primary);
+  opacity: 1;
   font-weight: 600;
-  border-bottom: 2px solid var(--mle-primary);
+}
+
+.mle-action-btn.active:hover {
+  background: var(--mle-primary-dark);
+  border-color: var(--mle-primary-dark);
 }
 
 /* ============================================
@@ -120,13 +147,27 @@
 .mle-widget-body {
   flex: 1 1 auto;
   overflow-y: auto;
-  background: var(--mle-bg-secondary);
+  background: white;
   min-height: 0;
+  padding: 16px;
 }
 
-.mle-tab-content {
-  padding: 16px;
+.mle-content-area {
+  height: 100%;
   box-sizing: border-box;
+}
+
+.mle-content-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--mle-text-primary);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--mle-border-color);
+}
+
+.mle-content-body {
+  /* Content formatting handled by child classes */
 }
 
 @keyframes fadeIn {
@@ -199,41 +240,7 @@
   margin: 8px 0 0 0;
 }
 
-/* ============================================
-   CONTENT HEADER (Minimal Design)
-   ============================================ */
-
-.mle-content-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--mle-border-color);
-}
-
-.mle-word-count {
-  font-size: 12px;
-  color: var(--mle-text-secondary);
-  font-weight: 500;
-}
-
-.mle-copy-btn-mini {
-  background: transparent;
-  border: 1px solid var(--mle-border-color);
-  color: var(--mle-text-secondary);
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.mle-copy-btn-mini:hover {
-  background: var(--mle-primary);
-  color: white;
-  border-color: var(--mle-primary);
-}
+/* Content header styles removed - now using footer for word count and actions */
 
 /* ============================================
    TEXT CONTENT
@@ -329,6 +336,18 @@
    DIAGRAM WRAPPER
    ============================================ */
 
+.mle-demo-badge {
+  background: rgba(237, 137, 54, 0.1);
+  border: 1px solid rgba(237, 137, 54, 0.3);
+  color: #c05621;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
 .mle-diagram-wrapper {
   background: white;
   border-radius: var(--mle-radius-md);
@@ -389,18 +408,24 @@
     max-width: 100%;
   }
 
-  .mle-widget-tabs {
-    overflow-x: auto;
-    scrollbar-width: none;
+  .mle-widget-footer {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
   }
 
-  .mle-widget-tabs::-webkit-scrollbar {
-    display: none;
+  .mle-action-buttons {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 6px;
   }
 
-  .mle-tab {
-    font-size: 13px;
-    padding: 8px 12px;
+  .mle-action-btn {
+    flex: 0 1 calc(50% - 3px);
+    min-width: 0;
+    font-size: 11px;
+    padding: 6px 8px;
+    justify-content: center;
   }
 }
 
