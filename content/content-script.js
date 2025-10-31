@@ -29,12 +29,22 @@
     console.log('[MLE] Initializing Multimodal Learning Enhancer...');
 
     try {
-      // Initialize components
+      // Initialize components with detailed error checking
+      console.log('[MLE] Creating ContentExtractor...');
       contentExtractor = new ContentExtractor();
+
+      console.log('[MLE] Creating ContentAnalyzer...');
       contentAnalyzer = new ContentAnalyzer();
+
+      console.log('[MLE] Loading ChromeAI...');
       chromeAI = window.ChromeAI;
 
+      if (!chromeAI) {
+        throw new Error('ChromeAI not loaded - chrome-ai-apis-v143.js may have failed to load');
+      }
+
       // Check Chrome AI availability
+      console.log('[MLE] Checking Chrome AI availability...');
       const availability = await chromeAI.checkAvailability();
       console.log('[MLE] Chrome AI availability:', availability);
 
@@ -44,21 +54,26 @@
       }
 
       // Initialize text transformer
+      console.log('[MLE] Creating TextTransformer...');
       textTransformer = new TextTransformer(chromeAI);
 
       // Initialize diagram components
+      console.log('[MLE] Creating DiagramGenerator...');
       diagramGenerator = new DiagramGenerator(chromeAI);
+
+      console.log('[MLE] Creating VisualEngine...');
       visualEngine = new VisualEngine();
 
       // Don't pre-load Mermaid - load it only when needed for diagrams
       // This speeds up initial page load significantly
 
       // Initialize widget
+      console.log('[MLE] Creating Widget...');
       widget = new Widget();
       widget.init();
 
       isInitialized = true;
-      console.log('[MLE] Initialization complete');
+      console.log('[MLE] ✅ Initialization complete - Extension ready');
 
       // Expose transformation trigger for widget buttons
       window.triggerWidgetTransformation = async (transformationType) => {
@@ -70,7 +85,21 @@
       };
 
     } catch (error) {
-      console.error('[MLE] Initialization failed:', error);
+      console.error('[MLE] ❌ Initialization failed:', error);
+      console.error('[MLE] Stack trace:', error.stack);
+
+      // Show user-friendly error notification
+      try {
+        chrome.runtime.sendMessage({
+          type: 'SHOW_NOTIFICATION',
+          payload: {
+            message: 'Extension initialization failed. Please reload the page.',
+            type: 'error'
+          }
+        });
+      } catch (notifError) {
+        console.error('[MLE] Could not send notification:', notifError);
+      }
     }
   }
 
@@ -79,6 +108,18 @@
    */
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log('[MLE] Received message:', message.type);
+
+    // Check if extension is initialized for content operations
+    if (message.type === 'TRANSFORM_CONTENT' || message.type === 'GET_CURRENT_CONTENT') {
+      if (!isInitialized) {
+        console.error('[MLE] Extension not initialized yet');
+        sendResponse({
+          success: false,
+          error: 'Extension is still initializing. Please wait a moment and try again.'
+        });
+        return false;
+      }
+    }
 
     switch (message.type) {
       case 'TRANSFORM_CONTENT':

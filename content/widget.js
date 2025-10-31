@@ -72,13 +72,13 @@ class Widget {
             <button class="mle-action-btn" data-action="summary" title="Generate Summary">
               📝 Summary
             </button>
-            <button class="mle-action-btn" data-action="visual" title="Generate Diagram">
-              📊 Diagram
-            </button>
             <button class="mle-action-btn" data-action="studynotes" title="Study Notes">
               🎯 Study Notes
             </button>
-            <button class="mle-action-btn" data-action="cornell" title="Cornell Notes">
+            <button class="mle-action-btn mle-beta-feature" data-action="visual" title="Generate Diagram (Demo Mode)">
+              📊 Diagram
+            </button>
+            <button class="mle-action-btn mle-beta-feature" data-action="cornell" title="Cornell Notes (Demo Mode)">
               📔 Cornell Notes
             </button>
           </div>
