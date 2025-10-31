@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chrome AI Quick Test</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #1a73e8; border-bottom: 3px solid #1a73e8; padding-bottom: 10px; }
+    .result { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .good { background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin: 10px 0; }
+    .bad { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin: 10px 0; }
+    button { background: #1a73e8; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 14px; margin: 5px; }
+    button:hover { background: #1557b0; }
+    pre { background: #f4f4f4; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+    code { background: #e7e7e7; padding: 2px 6px; border-radius: 3px; font-family: monospace; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Chrome AI Quick Test</h1>
+
+  <div class="result">
+    <h2>Click Button to Run Test</h2>
+    <button onclick="runTest()">🚀 RUN FULL TEST</button>
+    <div id="output"></div>
+  </div>
+
+  <script>
+    async function runTest() {
+      const output = document.getElementById('output');
+      output.innerHTML = '<p>Running tests...</p>';
+
+      let html = '<h3>Test Results:</h3>';
+
+      // Test 1: Check if ai exists
+      html += '<h4>1. Check if ai object exists</h4>';
+      if (typeof ai !== 'undefined') {
+        html += '<div class="good">✅ PASS: ai object exists</div>';
+      } else {
+        html += '<div class="bad">❌ FAIL: ai object not defined<br><strong>Fix:</strong> Enable <code>#prompt-api-for-gemini-nano</code> flag and restart Chrome</div>';
+        output.innerHTML = html;
+        return;
+      }
+
+      // Test 2: Check if ai.languageModel exists
+      html += '<h4>2. Check if ai.languageModel exists</h4>';
+      if (typeof ai.languageModel !== 'undefined') {
+        html += '<div class="good">✅ PASS: ai.languageModel exists</div>';
+      } else {
+        html += '<div class="bad">❌ FAIL: ai.languageModel not found</div>';
+        output.innerHTML = html;
+        return;
+      }
+
+      // Test 3: Check capabilities
+      html += '<h4>3. Check Prompt API capabilities</h4>';
+      try {
+        const caps = await ai.languageModel.capabilities();
+        html += '<div class="good">✅ PASS: Capabilities retrieved</div>';
+        html += '<pre>' + JSON.stringify(caps, null, 2) + '</pre>';
+
+        if (caps.available === 'readily') {
+          html += '<div class="good">✅ Model Status: READY</div>';
+        } else if (caps.available === 'after-download') {
+          html += '<div class="bad">⚠️ Model needs download. Run in console: <code>await ai.languageModel.create()</code></div>';
+          output.innerHTML = html;
+          return;
+        } else {
+          html += '<div class="bad">❌ Model not available: ' + caps.available + '</div>';
+          output.innerHTML = html;
+          return;
+        }
+      } catch (e) {
+        html += '<div class="bad">❌ FAIL: ' + e.message + '</div>';
+        output.innerHTML = html;
+        return;
+      }
+
+      // Test 4: Create session
+      html += '<h4>4. Create AI session</h4>';
+      let session;
+      try {
+        session = await ai.languageModel.create();
+        html += '<div class="good">✅ PASS: Session created</div>';
+      } catch (e) {
+        html += '<div class="bad">❌ FAIL: ' + e.message + '</div>';
+        output.innerHTML = html;
+        return;
+      }
+
+      // Test 5: Test prompt
+      html += '<h4>5. Test AI prompt</h4>';
+      try {
+        const result = await session.prompt('Say "I am working!" if you can hear me.');
+        html += '<div class="good">✅ PASS: AI responded</div>';
+        html += '<p><strong>AI Response:</strong> ' + result + '</p>';
+      } catch (e) {
+        html += '<div class="bad">❌ FAIL: ' + e.message + '</div>';
+      }
+
+      // Cleanup
+      await session.destroy();
+
+      // Test 6: Check Summarizer
+      html += '<h4>6. Check Summarizer API</h4>';
+      if (typeof Summarizer !== 'undefined') {
+        try {
+          const avail = await Summarizer.availability();
+          html += '<div class="good">✅ PASS: Summarizer available (' + avail + ')</div>';
+        } catch (e) {
+          html += '<div class="bad">⚠️ Summarizer check failed: ' + e.message + '</div>';
+        }
+      } else {
+        html += '<div class="bad">⚠️ Summarizer global not found (check flag)</div>';
+      }
+
+      // Final result
+      html += '<hr><h3>🎉 FINAL RESULT</h3>';
+      html += '<div class="good"><strong>✅ ALL TESTS PASSED!</strong><br>Prompt API is working correctly. Your extension should work now.<br><br><strong>Next step:</strong> Reload your extension at <code>chrome://extensions</code></div>';
+
+      output.innerHTML = html;
+    }
+  </script>
+</body>
+</html>

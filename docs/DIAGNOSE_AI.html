@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chrome AI Diagnostics</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 {
+      color: #1a73e8;
+      border-bottom: 3px solid #1a73e8;
+      padding-bottom: 10px;
+    }
+    .section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    .status.good { background: #d4edda; color: #155724; }
+    .status.bad { background: #f8d7da; color: #721c24; }
+    .status.warning { background: #fff3cd; color: #856404; }
+    .status.info { background: #d1ecf1; color: #0c5460; }
+    button {
+      background: #1a73e8;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 5px;
+    }
+    button:hover {
+      background: #1557b0;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      border-left: 4px solid #1a73e8;
+    }
+    .error {
+      background: #fff5f5;
+      border-left: 4px solid #e53e3e;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+    .success {
+      background: #f0fff4;
+      border-left: 4px solid #38a169;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+    .warning {
+      background: #fffaf0;
+      border-left: 4px solid #dd6b20;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+    .code {
+      background: #2d3748;
+      color: #68d391;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+    }
+    #output {
+      white-space: pre-wrap;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .step {
+      margin: 15px 0;
+      padding: 15px;
+      background: #f9fafb;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+    .step h3 {
+      margin-top: 0;
+      color: #2d3748;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Chrome Built-in AI Diagnostics</h1>
+
+  <div class="section">
+    <h2>Step 1: Check Chrome Environment</h2>
+    <button onclick="checkEnvironment()">Run Environment Check</button>
+    <div id="env-output"></div>
+  </div>
+
+  <div class="section">
+    <h2>Step 2: Check AI API Availability</h2>
+    <button onclick="checkAPIs()">Check All APIs</button>
+    <div id="api-output"></div>
+  </div>
+
+  <div class="section">
+    <h2>Step 3: Check Gemini Nano Model Status</h2>
+    <button onclick="checkModel()">Check Model Status</button>
+    <button onclick="downloadModel()" id="download-btn" disabled>Download Model</button>
+    <div id="model-output"></div>
+  </div>
+
+  <div class="section">
+    <h2>Step 4: Test Each API</h2>
+    <button onclick="testPromptAPI()">Test Prompt API</button>
+    <button onclick="testSummarizerAPI()">Test Summarizer API</button>
+    <button onclick="testWriterAPI()">Test Writer API</button>
+    <button onclick="testRewriterAPI()">Test Rewriter API</button>
+    <div id="test-output"></div>
+  </div>
+
+  <div class="section">
+    <h2>Step 5: Full Diagnostic Report</h2>
+    <button onclick="runFullDiagnostic()">Run Full Diagnostic</button>
+    <div id="full-output"></div>
+  </div>
+
+  <script>
+    function log(elementId, html) {
+      document.getElementById(elementId).innerHTML += html;
+    }
+
+    function clear(elementId) {
+      document.getElementById(elementId).innerHTML = '';
+    }
+
+    async function checkEnvironment() {
+      clear('env-output');
+      log('env-output', '<div class="step"><h3>Environment Check</h3>');
+
+      // Chrome version
+      const userAgent = navigator.userAgent;
+      const chromeVersion = userAgent.match(/Chrome\/(\d+)/)?.[1] || 'Unknown';
+      log('env-output', `<p><strong>Chrome Version:</strong> ${chromeVersion} ${chromeVersion >= 128 ? '<span class="status good">✓ OK</span>' : '<span class="status bad">✗ Too Old</span>'}</p>`);
+
+      // Check if we're in Chrome Dev/Canary
+      const isDevCanary = userAgent.includes('Dev') || userAgent.includes('Canary');
+      log('env-output', `<p><strong>Chrome Channel:</strong> ${isDevCanary ? 'Dev/Canary <span class="status good">✓ OK</span>' : 'Stable/Beta <span class="status warning">⚠ Need Dev/Canary</span>'}</p>`);
+
+      // Check window.ai
+      log('env-output', `<p><strong>window.ai exists:</strong> ${typeof window.ai !== 'undefined' ? '<span class="status good">✓ YES</span>' : '<span class="status bad">✗ NO</span>'}</p>`);
+
+      // Check global APIs
+      log('env-output', `<p><strong>ai global:</strong> ${typeof ai !== 'undefined' ? '<span class="status good">✓ YES</span>' : '<span class="status bad">✗ NO</span>'}</p>`);
+      log('env-output', `<p><strong>Summarizer global:</strong> ${typeof Summarizer !== 'undefined' ? '<span class="status good">✓ YES</span>' : '<span class="status bad">✗ NO</span>'}</p>`);
+
+      log('env-output', '</div>');
+    }
+
+    async function checkAPIs() {
+      clear('api-output');
+      log('api-output', '<div class="step"><h3>API Availability Check</h3>');
+
+      try {
+        // Check Prompt API
+        if (typeof ai !== 'undefined' && ai.languageModel) {
+          try {
+            const capabilities = await ai.languageModel.capabilities();
+            log('api-output', `<p><strong>Prompt API:</strong> <span class="status good">✓ Available</span></p>`);
+            log('api-output', `<pre>${JSON.stringify(capabilities, null, 2)}</pre>`);
+          } catch (e) {
+            log('api-output', `<p><strong>Prompt API:</strong> <span class="status bad">✗ Error</span></p>`);
+            log('api-output', `<div class="error">${e.message}</div>`);
+          }
+        } else {
+          log('api-output', `<p><strong>Prompt API:</strong> <span class="status bad">✗ Not Found</span></p>`);
+          log('api-output', `<div class="warning">ai.languageModel is not available. Check flags.</div>`);
+        }
+
+        // Check Summarizer API
+        if (typeof ai !== 'undefined' && ai.summarizer) {
+          try {
+            const capabilities = await ai.summarizer.capabilities();
+            log('api-output', `<p><strong>Summarizer API:</strong> <span class="status good">✓ Available</span></p>`);
+            log('api-output', `<pre>${JSON.stringify(capabilities, null, 2)}</pre>`);
+          } catch (e) {
+            log('api-output', `<p><strong>Summarizer API:</strong> <span class="status bad">✗ Error</span></p>`);
+            log('api-output', `<div class="error">${e.message}</div>`);
+          }
+        } else if (typeof Summarizer !== 'undefined') {
+          try {
+            const avail = await Summarizer.availability();
+            log('api-output', `<p><strong>Summarizer API (global):</strong> <span class="status ${avail === 'readily' ? 'good' : 'warning'}">Status: ${avail}</span></p>`);
+          } catch (e) {
+            log('api-output', `<p><strong>Summarizer API:</strong> <span class="status bad">✗ Error</span></p>`);
+            log('api-output', `<div class="error">${e.message}</div>`);
+          }
+        } else {
+          log('api-output', `<p><strong>Summarizer API:</strong> <span class="status bad">✗ Not Found</span></p>`);
+        }
+
+        // Check Writer API
+        if (typeof ai !== 'undefined' && ai.writer) {
+          try {
+            const capabilities = await ai.writer.capabilities();
+            log('api-output', `<p><strong>Writer API:</strong> <span class="status good">✓ Available</span></p>`);
+            log('api-output', `<pre>${JSON.stringify(capabilities, null, 2)}</pre>`);
+          } catch (e) {
+            log('api-output', `<p><strong>Writer API:</strong> <span class="status bad">✗ Error</span></p>`);
+            log('api-output', `<div class="error">${e.message}</div>`);
+          }
+        } else {
+          log('api-output', `<p><strong>Writer API:</strong> <span class="status bad">✗ Not Found</span></p>`);
+        }
+
+        // Check Rewriter API
+        if (typeof ai !== 'undefined' && ai.rewriter) {
+          try {
+            const capabilities = await ai.rewriter.capabilities();
+            log('api-output', `<p><strong>Rewriter API:</strong> <span class="status good">✓ Available</span></p>`);
+            log('api-output', `<pre>${JSON.stringify(capabilities, null, 2)}</pre>`);
+          } catch (e) {
+            log('api-output', `<p><strong>Rewriter API:</strong> <span class="status bad">✗ Error</span></p>`);
+            log('api-output', `<div class="error">${e.message}</div>`);
+          }
+        } else {
+          log('api-output', `<p><strong>Rewriter API:</strong> <span class="status bad">✗ Not Found</span></p>`);
+        }
+
+      } catch (e) {
+        log('api-output', `<div class="error">Fatal error: ${e.message}</div>`);
+      }
+
+      log('api-output', '</div>');
+    }
+
+    async function checkModel() {
+      clear('model-output');
+      log('model-output', '<div class="step"><h3>Gemini Nano Model Status</h3>');
+
+      try {
+        if (typeof ai === 'undefined' || !ai.languageModel) {
+          log('model-output', '<div class="error">❌ Prompt API not available. Cannot check model status.</div>');
+          log('model-output', '<div class="warning"><strong>Fix:</strong> Enable <span class="code">#prompt-api-for-gemini-nano</span> flag and restart Chrome.</div></div>');
+          return;
+        }
+
+        // Check capabilities
+        log('model-output', '<p>Checking capabilities...</p>');
+        const capabilities = await ai.languageModel.capabilities();
+        log('model-output', '<div class="success">✅ Capabilities retrieved successfully!</div>');
+        log('model-output', `<pre>${JSON.stringify(capabilities, null, 2)}</pre>`);
+
+        // Check availability
+        const available = capabilities.available;
+        if (available === 'readily') {
+          log('model-output', '<div class="success"><strong>✅ Model Status: READY</strong><br>Gemini Nano is downloaded and ready to use!</div>');
+          document.getElementById('download-btn').disabled = true;
+        } else if (available === 'after-download') {
+          log('model-output', '<div class="warning"><strong>⚠️ Model Status: NEEDS DOWNLOAD</strong><br>Model needs to be downloaded (~1.7 GB)</div>');
+          document.getElementById('download-btn').disabled = false;
+        } else if (available === 'no') {
+          log('model-output', '<div class="error"><strong>❌ Model Status: NOT AVAILABLE</strong><br>Model cannot be used on this device/Chrome version</div>');
+        } else {
+          log('model-output', `<div class="info"><strong>ℹ️ Model Status: ${available}</strong></div>`);
+        }
+
+        // Try to create a session (this will trigger download if needed)
+        log('model-output', '<p><br>Testing session creation...</p>');
+        try {
+          const session = await ai.languageModel.create();
+          log('model-output', '<div class="success">✅ Session created successfully! Model is working.</div>');
+          await session.destroy();
+        } catch (e) {
+          if (e.message.includes('download')) {
+            log('model-output', '<div class="warning">⚠️ Model download in progress or required.</div>');
+            log('model-output', `<div class="error">${e.message}</div>`);
+            document.getElementById('download-btn').disabled = false;
+          } else {
+            log('model-output', '<div class="error">❌ Failed to create session</div>');
+            log('model-output', `<div class="error">${e.message}</div>`);
+          }
+        }
+
+      } catch (e) {
+        log('model-output', `<div class="error"><strong>Error:</strong> ${e.message}</div>`);
+        log('model-output', '<div class="warning"><strong>Possible causes:</strong><ul><li>Flags not enabled</li><li>Chrome needs restart</li><li>Using wrong Chrome version</li></ul></div>');
+      }
+
+      log('model-output', '</div>');
+    }
+
+    async function downloadModel() {
+      clear('model-output');
+      log('model-output', '<div class="step"><h3>Downloading Gemini Nano Model</h3>');
+      log('model-output', '<div class="info">⏳ Starting download... This will take 10-20 minutes (~1.7 GB)</div>');
+      log('model-output', '<p>Please keep this tab open and Chrome running.</p>');
+
+      try {
+        const session = await ai.languageModel.create();
+        log('model-output', '<div class="success">✅ Download complete! Model is ready.</div>');
+        await session.destroy();
+        document.getElementById('download-btn').disabled = true;
+      } catch (e) {
+        log('model-output', `<div class="error">Download failed: ${e.message}</div>`);
+        log('model-output', '<p>Try running this in DevTools Console instead:</p>');
+        log('model-output', '<pre>await ai.languageModel.create()</pre>');
+      }
+
+      log('model-output', '</div>');
+    }
+
+    async function testPromptAPI() {
+      clear('test-output');
+      log('test-output', '<div class="step"><h3>Testing Prompt API</h3>');
+
+      try {
+        const session = await ai.languageModel.create();
+        log('test-output', '<p>✓ Session created</p>');
+
+        const result = await session.prompt('Say "Hello, I am working!" if you can hear me.');
+        log('test-output', '<div class="success">✅ Prompt API works!</div>');
+        log('test-output', `<p><strong>Response:</strong> ${result}</p>`);
+
+        await session.destroy();
+      } catch (e) {
+        log('test-output', `<div class="error">❌ Prompt API test failed: ${e.message}</div>`);
+      }
+
+      log('test-output', '</div>');
+    }
+
+    async function testSummarizerAPI() {
+      clear('test-output');
+      log('test-output', '<div class="step"><h3>Testing Summarizer API</h3>');
+
+      try {
+        const canSummarize = typeof ai !== 'undefined' && ai.summarizer ?
+          await ai.summarizer.capabilities() :
+          (typeof Summarizer !== 'undefined' ? await Summarizer.availability() : null);
+
+        if (!canSummarize) {
+          log('test-output', '<div class="error">❌ Summarizer API not available</div>');
+          log('test-output', '</div>');
+          return;
+        }
+
+        const summarizer = typeof ai !== 'undefined' && ai.summarizer ?
+          await ai.summarizer.create({ type: 'key-points', format: 'markdown', length: 'short', sharedContext: 'en' }) :
+          await Summarizer.create({ type: 'key-points', format: 'markdown', length: 'short', sharedContext: 'en' });
+
+        log('test-output', '<p>✓ Summarizer created</p>');
+
+        const testText = 'The Multimodal Learning Enhancer is a Chrome extension that transforms web content into different learning formats. It uses Chrome\'s built-in AI APIs to generate diagrams, summaries, and study notes. The extension is designed to help visual learners, quick readers, and deep learners access information in their preferred format.';
+
+        const summary = await summarizer.summarize(testText);
+        log('test-output', '<div class="success">✅ Summarizer API works!</div>');
+        log('test-output', `<p><strong>Summary:</strong></p><pre>${summary}</pre>`);
+
+        await summarizer.destroy();
+      } catch (e) {
+        log('test-output', `<div class="error">❌ Summarizer API test failed: ${e.message}</div>`);
+      }
+
+      log('test-output', '</div>');
+    }
+
+    async function testWriterAPI() {
+      clear('test-output');
+      log('test-output', '<div class="step"><h3>Testing Writer API</h3>');
+      log('test-output', '<div class="warning">⚠️ Writer API may not be available in current Chrome versions</div>');
+      log('test-output', '</div>');
+    }
+
+    async function testRewriterAPI() {
+      clear('test-output');
+      log('test-output', '<div class="step"><h3>Testing Rewriter API</h3>');
+      log('test-output', '<div class="warning">⚠️ Rewriter API may not be available in current Chrome versions</div>');
+      log('test-output', '</div>');
+    }
+
+    async function runFullDiagnostic() {
+      clear('full-output');
+      log('full-output', '<h3>🔍 Full Diagnostic Report</h3>');
+      log('full-output', '<div class="info">Running all checks... Please wait.</div>');
+
+      // Run all checks
+      await checkEnvironment();
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await checkAPIs();
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await checkModel();
+
+      log('full-output', '<div class="success">✅ Diagnostic complete! Check results above.</div>');
+      log('full-output', '<hr><h3>Quick Summary:</h3>');
+
+      // Generate summary
+      const hasPro mptAPI = typeof ai !== 'undefined' && ai.languageModel;
+      const hasSummarizer = (typeof ai !== 'undefined' && ai.summarizer) || typeof Summarizer !== 'undefined';
+
+      if (hasPromptAPI && hasSummarizer) {
+        log('full-output', '<div class="success"><strong>✅ APIs are available!</strong><br>If extension still not working, reload it at chrome://extensions</div>');
+      } else if (!hasPromptAPI) {
+        log('full-output', '<div class="error"><strong>❌ Prompt API missing</strong><br>Enable <span class="code">#prompt-api-for-gemini-nano</span> and restart Chrome</div>');
+      } else if (!hasSummarizer) {
+        log('full-output', '<div class="warning"><strong>⚠️ Summarizer API missing</strong><br>Enable <span class="code">#summarization-api-for-gemini-nano</span> and restart Chrome</div>');
+      }
+    }
+  </script>
+</body>
+</html>

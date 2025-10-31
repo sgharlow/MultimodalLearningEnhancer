@@ -33,14 +33,13 @@
 
       // Check Prompt API / Language Model
       // IMPORTANT: Use 'ai' not 'window.ai' - there's a difference in typeof behavior
+      // NOTE: Prompt API is typically NOT available in page context - this is expected
       if (typeof ai !== 'undefined' && ai?.languageModel) {
         availability.promptAPI = true;
         console.log('[PageInjector] ✅ Prompt API (ai.languageModel) found!');
       } else {
-        console.warn('[PageInjector] ❌ Prompt API not found. typeof ai:', typeof ai);
-        if (typeof ai !== 'undefined') {
-          console.warn('[PageInjector] ai exists but ai.languageModel:', ai?.languageModel);
-        }
+        // Don't warn - Prompt API is not available in page context (this is normal)
+        // Extension will use content script context for Prompt API instead
       }
 
       // Check Writer
