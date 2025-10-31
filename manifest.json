@@ -77,6 +77,7 @@
         "lib/mermaid.min.js",
         "assets/images/*.svg",
         "assets/images/*.png",
+        "assets/icons/*.png",
         "styles/*.css"
       ],
       "matches": ["<all_urls>"]

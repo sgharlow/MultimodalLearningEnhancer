@@ -43,9 +43,10 @@ Learning from the web shouldn't be one-size-fits-all. **Multimodal Learning Enha
 
 - **Auto-Detection** - Intelligently selects best diagram type based on content
 - **Right-Click Transform** - Context menu for quick access
-- **Floating Widget** - Beautiful draggable UI with 4 instant-toggle buttons
+- **Floating Widget** - Beautiful draggable UI with branded icon and 4 instant-toggle buttons
 - **Instant Switching** - Toggle between cached transformations instantly (5-8s only on first generation)
 - **Visual Feedback** - Button states show active/available/unavailable transformations
+- **One-Click Copy** - Copy any transformation to clipboard with visual confirmation
 - **History Management** - Search, filter, delete transformations
 - **Export/Import** - Backup and restore your history
 - **Statistics Dashboard** - Track your usage

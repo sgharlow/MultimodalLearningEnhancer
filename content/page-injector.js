@@ -90,7 +90,7 @@
         type: options.type || 'key-points',
         format: options.format || 'markdown',
         length: options.length || 'medium',
-        language: 'en'
+        sharedContext: 'en'
       });
 
       const result = await summarizer.summarize(text);

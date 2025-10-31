@@ -48,7 +48,10 @@ class Widget {
     this.container.innerHTML = `
       <div class="mle-widget-container">
         <div class="mle-widget-header">
-          <h2 class="mle-widget-title">Learning Enhancer</h2>
+          <h2 class="mle-widget-title">
+            <img src="${chrome.runtime.getURL('assets/icons/icon-512.png')}" class="mle-title-icon" alt="">
+            Learning Enhancer
+          </h2>
           <button class="mle-close-btn" title="Close">×</button>
         </div>
 
@@ -61,7 +64,10 @@ class Widget {
         </div>
 
         <div class="mle-widget-footer">
-          <span class="mle-word-count">0 words</span>
+          <div class="mle-footer-left">
+            <span class="mle-word-count">0 words</span>
+            <button class="mle-copy-all-btn" title="Copy all content to clipboard">📋 Copy</button>
+          </div>
           <div class="mle-action-buttons">
             <button class="mle-action-btn" data-action="summary" title="Generate Summary">
               📝 Summary
@@ -99,6 +105,14 @@ class Widget {
         await this.triggerAction(action);
       };
     });
+
+    // Copy all button
+    const copyBtn = this.container.querySelector('.mle-copy-all-btn');
+    if (copyBtn) {
+      copyBtn.onclick = () => {
+        this.copyCurrentContent();
+      };
+    }
 
     // Make header draggable
     this.makeDraggable();
@@ -525,6 +539,68 @@ class Widget {
       contentArea.innerHTML = loadingHTML;
       this.show();
     }
+  }
+
+  /**
+   * Copy current content to clipboard
+   */
+  copyCurrentContent() {
+    const currentResult = this.results[this.currentTab];
+
+    if (!currentResult) {
+      console.warn('[Widget] No content to copy');
+      return;
+    }
+
+    let textToCopy = '';
+    const copyBtn = this.container?.querySelector('.mle-copy-all-btn');
+
+    // Get the appropriate content based on type
+    if (currentResult.content) {
+      textToCopy = currentResult.content;
+    } else if (currentResult.mermaidCode) {
+      textToCopy = currentResult.mermaidCode;
+    }
+
+    if (!textToCopy) {
+      console.warn('[Widget] No text content found to copy');
+      return;
+    }
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(textToCopy)
+      .then(() => {
+        console.log('[Widget] Content copied to clipboard');
+
+        // Visual feedback
+        if (copyBtn) {
+          const originalText = copyBtn.innerHTML;
+          copyBtn.innerHTML = '✅ Copied!';
+          copyBtn.style.background = 'var(--mle-success)';
+          copyBtn.style.color = 'white';
+          copyBtn.style.borderColor = 'var(--mle-success)';
+
+          setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+            copyBtn.style.background = '';
+            copyBtn.style.color = '';
+            copyBtn.style.borderColor = '';
+          }, 2000);
+        }
+      })
+      .catch(err => {
+        console.error('[Widget] Failed to copy content:', err);
+
+        // Error feedback
+        if (copyBtn) {
+          const originalText = copyBtn.innerHTML;
+          copyBtn.innerHTML = '❌ Failed';
+
+          setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+          }, 2000);
+        }
+      });
   }
 
   /**
