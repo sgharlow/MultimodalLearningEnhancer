@@ -1,3 +1,5 @@
+> 📦 **Archived** — Web adaptation for different learning styles, early 2026. Not maintained. Code and history remain browsable.
+
 # 🧠 Multimodal Learning Enhancer
 
 > Transform any webpage into your brain's native language - diagrams, summaries, and study notes powered by Chrome's built-in AI
